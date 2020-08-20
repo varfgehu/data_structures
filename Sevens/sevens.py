@@ -15,7 +15,7 @@ class Card(object):
 
     def show(self):
         if self is None:
-            print("pass")
+            print("CARD PASS - CARD PASS - CARD PASS - CARD PASS - CARD PASS")
             return
 
 
@@ -285,12 +285,15 @@ def card_selection_magic(player):
 
     num_of_cards = len(possible_cards)
     if num_of_cards == 1:
-        return possible_cards[0]
+        if possible_cards[0] in player.hand:
+            return possible_cards[0]
+        else:
+            return None
     else:
         # This is where a lazy and smart solutions should be separated
 
         # This is the lazy solution for now
-        for i in range(0, num_of_cards-1):
+        for i in range(0, num_of_cards):
             if possible_cards[i] in player.hand:
                 return possible_cards[i]
         return None
@@ -450,7 +453,7 @@ while True:
 
     print(player_with_action.name + "'s action:")
     if selected_card is None:
-        print("pass")
+        print("PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS")
     else:
         selected_card.show()
         place_card_to_layout(player_with_action, selected_card)
