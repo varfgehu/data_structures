@@ -73,8 +73,9 @@ class Deck(object):
         return len(self.cards) == 0
 
 class Player(object):
-    def __init__(self, name):
+    def __init__(self, name, skills):
         self.name = name
+        self.skills = skills
         self.hand = []
         self.dealer = False
         self.next = None
@@ -97,6 +98,9 @@ class Player(object):
 
     def number_of_cards_in_hand(self):
         return len(self.hand)
+
+    def is_card_in_hand(self, card):
+        return card in self.hand
 
 
 class Players(object):
@@ -161,7 +165,6 @@ class Layouts(object):
         self.clubs = []
 
     def show(self):
-        suit_lists = [self.diamonds, self.hearts, self.spades, self.clubs]
         suit_dict = {'Hearts': layouts.hearts, 'Diamonds': layouts.diamonds, 'Spades': layouts.spades, 'Clubs': layouts.clubs}
         for suit_name, suit_list in suit_dict.items():
             assemble_list = []
@@ -285,18 +288,33 @@ def card_selection_magic(player):
 
     num_of_cards = len(possible_cards)
     if num_of_cards == 1:
-        if possible_cards[0] in player.hand:
+        if player.is_card_in_hand(possible_cards[0]):
             return possible_cards[0]
         else:
             return None
     else:
         # This is where a lazy and smart solutions should be separated
+        # Lazy: shuffle the list of card and select the first one -> becomes random like
+        # Smart: fill a dictionary where the keys are the cards and values are the abs distance from 7, choose the highest
 
-        # This is the lazy solution for now
-        for i in range(0, num_of_cards):
-            if possible_cards[i] in player.hand:
-                return possible_cards[i]
-        return None
+        # Give randomness to the possible cards
+        random.shuffle(possible_cards)
+        if player.skills == False:
+            for i in range(0, num_of_cards):
+                if player.is_card_in_hand(possible_cards[i]):
+                    return possible_cards[i]
+            return None
+        else:
+            max = 0
+            smart_card = None
+            for i in range(0, num_of_cards):
+                if max <= abs(7 - possible_cards[i].value) and player.is_card_in_hand(possible_cards[i]):
+                    max = abs(7 - possible_cards[i].value)
+                    smart_card = possible_cards[i]
+
+            print("Skilled selected card:")
+            smart_card.show()
+            return smart_card
 
 
 
@@ -353,7 +371,7 @@ def validate_card(player, card):
     possible_cards = return_possible_cards(player)
     if card is None:
         for possible_card in possible_cards:
-            if possible_card in player.hand:
+            if player.is_card_in_hand(possible_card):
                 return False
         return True
 
@@ -379,9 +397,9 @@ deck.shuffle()
 print()
 players = Players()
 player_name = input("Please enter a name!\n")
-user = Player(player_name)
-lazy = Player("Lazy")
-smart  = Player("Smart")
+user = Player(player_name, skills = False)
+lazy = Player("Lazy", skills = False)
+smart  = Player("Smart", skills = True)
 players.append(user)
 players.append(lazy)
 players.append(smart)
