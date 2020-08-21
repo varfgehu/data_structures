@@ -320,17 +320,8 @@ def card_selection_magic(player):
 
 def generate_card_from_input(card_input):
     """
-    Create a card instance from the card input
-            if self.value == 14:
-                value = "Ace"
-            elif self.value == 11:
-                value = "Jack"
-            elif self.value == 12:
-                value = "Queen"
-            elif self.value == 13:
-                value = "King"
     """
-    if card_input == "pass" or card_input == "knock":
+    if card_input == "pass":
         return None
 
     suit_code = card_input[-1]
@@ -383,6 +374,10 @@ def validate_card(player, card):
 
     return True
 
+def does_card_input_represent_card(user_input):
+    if user_input == "pass":
+        return True
+    return user_input[-1] in ["d", "h", "s", "c"] and user_input[:-1].lower() in ["2", "3", "4", "5", "6", "7", "8", "9", "10", "j", "d", "k", "a"]
 
 ################################################################################
 ############################ MAIN ##############################################
@@ -462,9 +457,14 @@ while True:
         print("Select a card from your hand!\n(Selected card format: For 7 of Diamonds enter 7d, for King of Heart enter kh)\n")
         while True:
             card_input = input("")
+            if not does_card_input_represent_card(card_input):
+                print("Not a valid input for card.\nPlease try again!")
+                continue
             selected_card = generate_card_from_input(card_input)
             if validate_card(player_with_action, selected_card):
                 break
+            else:
+                print("Valid card, but not a valid choice\n")
     else:
         print(str(player_with_action.name) + "'s turn")
         selected_card = card_selection_magic(player_with_action)
