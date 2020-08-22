@@ -15,7 +15,7 @@ class Card(object):
 
     def show(self):
         if self is None:
-            print("CARD PASS - CARD PASS - CARD PASS - CARD PASS - CARD PASS")
+            print("CARD PASS")
             return
 
         if self.value == 14:
@@ -75,6 +75,7 @@ class Player(object):
         self.name = name
         self.skills = skills
         self.hand = []
+        self.score = 0
         self.dealer = False
         self.next = None
 
@@ -108,10 +109,20 @@ class Player(object):
     def remove_all_cards(self):
         self.hand = []
 
+    def add_point(self):
+        self.score += 1
+
+    def show_score(self):
+        return self.name + ": " + str(self.score)
+
+    def reset_score(self):
+        self.score = 0
+
 
 class Players(object):
     def __init__(self):
         self.head = None
+        self.scoring = False
 
     def append(self, player):
         if self.head is None:
@@ -179,6 +190,31 @@ class Players(object):
             if player == self.head:
                 break
         return False
+
+    def scoring_enabled(self):
+        self.scoring = True
+
+    def is_scoring_enabled(self):
+        return self.scoring
+
+    def show_scores(self):
+        player = self.head
+        print("Scores:")
+        while player:
+            print(player.show_score())
+            player = player.next
+            if player == self.head:
+                break
+        print("")
+
+    def reset_scores(self):
+        player = self.head
+        while player:
+            player.reset_score()
+            player = player.next
+            if player == self.head:
+                break
+
 
 class Layouts(object):
     def __init__(self):
@@ -338,30 +374,25 @@ def generate_card_from_input(card_input):
     if card_input == "pass":
         return None
 
-    suit_code = card_input[-1]
-    if suit_code == "d":
+    if card_input[-1] == "d":
         card_suit = "Diamonds"
-    elif suit_code == "h":
+    elif card_input[-1] == "h":
         card_suit = "Hearts"
-    elif suit_code == "s":
+    elif card_input[-1] == "s":
         card_suit = "Spades"
-    elif suit_code == "c":
-        card_suit = "Clubs"
     else:
-        print("Unknown suit code input!")
-        return False
+        card_suit = "Clubs"
 
-    value_code = card_input[:-1]
-    if value_code == "a":
+    if card_input[:-1] == "a":
         card_value = 14
-    elif value_code == "j":
+    elif card_input[:-1] == "j":
         card_value = 11
-    elif value_code == "q":
+    elif card_input[:-1] == "q":
         card_value = 12
-    elif value_code == "k":
+    elif card_input[:-1] == "k":
         card_value = 13
     else:
-        card_value = int(value_code)
+        card_value = int(card_input[:-1])
 
     return Card(card_suit, card_value)
 
@@ -389,9 +420,12 @@ def validate_card(player, card):
     return True
 
 def does_card_input_represent_card(user_input):
-    if user_input == "pass":
+    if user_input == "":
+        return False
+
+    if user_input == "pass" or user_input[-1] in ["d", "h", "s", "c"] and user_input[:-1].lower() in ["2", "3", "4", "5", "6", "7", "8", "9", "10", "j", "q", "k", "a"]:
         return True
-    return user_input[-1] in ["d", "h", "s", "c"] and user_input[:-1].lower() in ["2", "3", "4", "5", "6", "7", "8", "9", "10", "j", "q", "k", "a"]
+    return False
 
 def deal_cards():
     player = players.find_dealer()
@@ -439,6 +473,11 @@ players.show_game()
 # Create layout for the layed down cards
 layouts = Layouts()
 
+# Scoring decision and setting
+user_scoring_choice = ask_yes_no("Would you like to collect scores? (y/n)\n")
+if user_scoring_choice.lower() == "y":
+    players.scoring_enabled()
+
 # Handle dealing
 user_dealer_choice = ask_yes_no("Would you like to be the first dealer? (y/n)\n")
 if user_dealer_choice.lower() == "y":
@@ -478,16 +517,21 @@ while True:
 
         print(player_with_action.name + "'s action:")
         if selected_card is None:
-            print("PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS-PASS")
+            print("PASS")
         else:
             selected_card.show()
             place_card_to_layout(player_with_action, selected_card)
 
         if player_with_action.number_of_cards_in_hand() == 0:
             print("The winner is: ", player_with_action.name)
+            if players.is_scoring_enabled():
+                player_with_action.add_point()
             break
 
         player_with_action = player_with_action.next
+
+    if players.is_scoring_enabled():
+        players.show_scores()
 
     user_input = ask_yes_no("Would you like to play again? (y/n)")
     if user_input.lower() == "n":
