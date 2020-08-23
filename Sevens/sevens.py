@@ -1,6 +1,5 @@
 import random
 
-number_of_players = 3
 suits = ["Hearts", "Diamonds", "Spades", "Clubs"]
 values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 
@@ -120,8 +119,11 @@ class Player(object):
     def pick_up_card(self, card):
         self.hand.append(card)
 
+    def get_player_name(self):
+        return self.name
 
-class Players(object):
+
+class Game(object):
     def __init__(self):
         self.head = None
         self.scoring = False
@@ -137,7 +139,7 @@ class Players(object):
             cur.next = player
             player.next = self.head
 
-    def show_game(self):
+    def show_players(self):
         print("Game players:")
         player = self.head
         while player:
@@ -260,13 +262,10 @@ def replace_figures(value):
     return value
 
 def place_card_to_layout(layouts, player, card):
-    # print("place_card_to_layout")
-    # print(player.name)
-    # player.show_hand()
-    # print("card:")
-    # card.show()
-    # print()
-
+    """
+    Place the card card from the player's hand to the layout.
+    None card represents a pass move.
+    """
     # Check for "pass"
     if card is None:
         return
@@ -275,22 +274,25 @@ def place_card_to_layout(layouts, player, card):
     layouts.add_card(card)
 
 def return_possible_cards(layouts):
+    """
+    Return all suitable cards in an array, based on the current layouts.
+    """
     possible_cards = []
     dict = {'Hearts': layouts.hearts, 'Diamonds': layouts.diamonds, 'Spades': layouts.spades, 'Clubs': layouts.clubs}
 
     for suit_name, suit_list in dict.items():
-        # The layout of the suit is not started, so add 7 to the list
+        # The layout of the suit is not started, so add 7 to the array
         if len(suit_list) == 0:
             possible_cards.append(Card(suit_name, 7))
             continue
 
-        # Find the index in values (2..14) of the firt element ([:1]) of the list, the previous index is a value for a possible card (if in range)
+        # Find the index of values (2..14) of the firt element ([:1]) of the array, the previous index is a value for a possible card (if in range)
         for i in range(len(values)):
             if values[i] in suit_list[:1] and i > 0:
                 possible_cards.append(Card(suit_name, values[i-1]))
                 break
 
-        # Find the index in values (2..14) of the last element ([:1]) of the list, the next index is a value for a possible card (if in range)
+        # Find the index of values (2..14) of the last element ([-1:]) of the array, the next index is a value for a possible card (if in range)
         for i in range(len(values)):
             if values[i] in suit_list[-1:] and i < 12:
                 possible_cards.append(Card(suit_name, values[i+1]))
@@ -300,26 +302,10 @@ def return_possible_cards(layouts):
 
 def card_selection_magic(layouts, player):
     """
-    Input: player (Player class)
-    Output: card (Card class)
-    Functionality:
-    The function should select a valid card from the hand of the player,
-    considering the actual layout.
-    Prepare to "knock"/"pass".
-    Consider:
-        - the card should be valid based on the rules of the game
-        - prepare for lazy and smart opponent choices
+
     """
 
     possible_cards = return_possible_cards(layouts)
-
-    # # Print selected cards (DEBUG)
-    # if len(possible_cards) == 0:
-    #     return "pass"
-    # print("Suitable cards:")
-    # for i in range(len(possible_cards)):
-    #     possible_cards[i].show()
-
 
     # Now you have all cards for a valid move
     # Filter for the hand of the actual player
@@ -355,6 +341,7 @@ def card_selection_magic(layouts, player):
 
 def generate_card_from_input(card_input):
     """
+    Return a Card instance based in the input string.
     """
     if card_input == "pass":
         return None
@@ -384,10 +371,10 @@ def generate_card_from_input(card_input):
 
 def validate_card(layouts, player, card):
     """
-    Validation steps:
-    1, If "pass" was given (None card), check if any of the possible cards is in the player hand
-    2, Check if the card entered by the user is in his/her hand
-    3, Check if the card is suitable for the layout
+    Check, if the card of choice:
+        - is in the players hand
+        - suitable for the actual layout
+        - Pass is only accapted if there is not any suitable cards in the hands of the player
     """
     possible_cards = return_possible_cards(layouts)
     if card is None:
@@ -405,6 +392,9 @@ def validate_card(layouts, player, card):
     return True
 
 def does_card_input_represent_card(user_input):
+    """
+    Return True if the input string represents a card, in any other case return False.
+    """
     if user_input == "":
         return False
 
@@ -412,14 +402,20 @@ def does_card_input_represent_card(user_input):
         return True
     return False
 
-def deal_cards(players, deck):
-    player = players.find_dealer()
+def deal_cards(game, deck):
+    """
+    Each player draws one card from the deck until the deck is empty.
+    """
+    player = game.find_dealer()
     print("Dealer: " + player.name)
     while not deck.is_empty():
         player.next.draw(deck)
         player = player.next
 
 def ask_player_name():
+    """
+    Ask for the name of the player until it is not an empty string.
+    """
     while True:
         user_input = input("Please enter a name: ")
         if user_input == "":
@@ -428,6 +424,9 @@ def ask_player_name():
         return user_input
 
 def ask_yes_no(string):
+    """
+    Ask a yes-no question until a valid answer.
+    """
     while True:
         user_input = input(string)
         if user_input.lower() == "y" or user_input.lower() == "n":
@@ -444,48 +443,49 @@ def main():
     deck = Deck()
     deck.shuffle()
 
-    # Create players
-    players = Players()
+    # Create players and add to the game
+    game = Game()
     player_name = ask_player_name()
     user = Player(player_name)
     lazy = Player("Lazy")
     smart  = Player("Smart", True)
-    players.append(user)
-    players.append(lazy)
-    players.append(smart)
-    players.show_game()
+    game.append(user)
+    game.append(lazy)
+    game.append(smart)
+    game.show_players()
 
-    # Create layout for the layed down cards
+    # Create layouts for the layed down cards
     layouts = Layouts()
 
     # Scoring decision and setting
     user_scoring_choice = ask_yes_no("Would you like to collect scores? (y/n)\n")
     if user_scoring_choice.lower() == "y":
-        players.enable_scoring()
+        game.enable_scoring()
 
-    # Handle dealing
+    # Dealing decision and setting
     user_dealer_choice = ask_yes_no("Would you like to be the first dealer? (y/n)\n")
     if user_dealer_choice.lower() == "y":
         user.set_for_dealer()
     else:
         lazy.set_for_dealer()
+    deal_cards(game, deck)
+    game.organise_hands()
 
-    deal_cards(players, deck)
-    players.organise_hands()
     while True:
         # Starting the game, the first round with 7 of Diamonds is generated
-        player_with_action = players.return_player_with_7_diamonds()
-        print("The player with the 7 of Diamonds stars the Game:", player_with_action.name)
-
+        player_with_action = game.return_player_with_7_diamonds()
+        print("The player with the 7 of Diamonds stars the Game:", player_with_action.get_player_name())
         place_card_to_layout(layouts,player_with_action, Card("Diamonds", 7))
         player_with_action = player_with_action.next
 
         while True:
             if player_with_action == user:
                 # Create an input to allow the user to enter his/her selected card
-                print("\n\nYour turn: " + str(player_with_action.name) + "\n")
+                print("\n\nYour turn: " + str(player_with_action.get_player_name()) + "\n")
                 layouts.show()
                 player_with_action.show_hand()
+
+                # Handle user input
                 print("Select a card from your hand!\n")
                 while True:
                     card_input = input("")
@@ -500,41 +500,39 @@ def main():
             else:
                 selected_card = card_selection_magic(layouts, player_with_action)
 
-            print(player_with_action.name + "'s action:")
+            print(player_with_action.get_player_name() + "'s action:")
             if selected_card is None:
                 print("PASS")
             else:
                 selected_card.show()
                 place_card_to_layout(layouts, player_with_action, selected_card)
 
+            # Checking for a winner
             if player_with_action.number_of_cards_in_hand() == 0:
-                print("The winner is: ", player_with_action.name)
-                if players.is_scoring_enabled():
+                print("The winner is: ", player_with_action.get_player_name())
+                if game.is_scoring_enabled():
                     player_with_action.add_point()
                 break
 
+            # Shift player for the next turn
             player_with_action = player_with_action.next
 
-        if players.is_scoring_enabled():
-            players.show_scores()
+        # Display scores
+        if game.is_scoring_enabled():
+            game.show_scores()
 
+        #  Decision for a nex game and resetting deck, layouts, players, dealing
         user_input = ask_yes_no("Would you like to play again? (y/n)")
         if user_input.lower() == "n":
             break
         else:
-            # Build Deck
             deck.build()
-            # Shuffle cards
             deck.shuffle()
-            # Clear layouts
             layouts.clear()
-            # Clear player hands
-            players.clear_hands()
-            # Shift dealer
-            players.shift_dealer()
-            # Deal cards, organise hands
-            deal_cards(players, deck)
-            players.organise_hands()
+            game.clear_hands()
+            game.shift_dealer()
+            deal_cards(game, deck)
+            game.organise_hands()
 
     print("Thank you for playing, try again soon!")
 

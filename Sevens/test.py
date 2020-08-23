@@ -1,6 +1,6 @@
 import unittest
 
-from sevens_with_skills import *
+from sevens import *
 
 class TestDeckClass(unittest.TestCase):
 
@@ -144,40 +144,44 @@ class TestPlayerClass(unittest.TestCase):
         p.add_point()
         self.assertEqual(p.show_score(), "Name: 3")
 
-class TestPlayersClass(unittest.TestCase):
-    def test_players_init(self):
-        p = Players()
-        self.assertIsNone(p.head)
-        self.assertFalse(p.scoring)
+    def test_player_return_player_name(self):
+        p = Player("Name")
+        self.assertEqual(p.get_player_name(), "Name")
 
-    def test_players_append(self):
-        players = Players()
+class TestGameClass(unittest.TestCase):
+    def test_game_init(self):
+        g = Game()
+        self.assertIsNone(g.head)
+        self.assertFalse(g.scoring)
+
+    def test_game_append(self):
+        g = Game()
         p1 = Player("Name")
-        players.append(p1)
-        self.assertEqual(players.head, p1)
+        g.append(p1)
+        self.assertEqual(g.head, p1)
         self.assertEqual(p1.next, p1)
 
-    def test_players_append_2(self):
-        players = Players()
+    def test_game_append_2(self):
+        g = Game()
         p1 = Player("Name")
         p2 = Player("Name2")
-        players.append(p1)
-        players.append(p2)
-        self.assertEqual(players.head, p1)
+        g.append(p1)
+        g.append(p2)
+        self.assertEqual(g.head, p1)
         self.assertEqual(p1.next, p2)
         self.assertEqual(p2.next, p1)
 
-    def test_players_find_dealer(self):
-        players = Players()
+    def test_game_find_dealer(self):
+        g = Game()
         p1 = Player("Name")
         p2 = Player("Name2")
-        players.append(p1)
-        players.append(p2)
+        g.append(p1)
+        g.append(p2)
         p2.set_for_dealer()
-        self.assertEqual(players.find_dealer(), p2)
+        self.assertEqual(g.find_dealer(), p2)
 
-    def test_players_clear_hands(self):
-        players = Players()
+    def test_game_clear_hands(self):
+        g = Game()
         p1 = Player("Name")
         p2 = Player("Name2")
         h7_card = Card("Hearts", 7)
@@ -188,16 +192,16 @@ class TestPlayersClass(unittest.TestCase):
         p1.pick_up_card(h7_card)
         p2.pick_up_card(d7_card)
         p2.pick_up_card(d6_card)
-        players.append(p1)
-        players.append(p2)
+        g.append(p1)
+        g.append(p2)
         self.assertEqual(len(p1.hand), 2)
         self.assertEqual(len(p1.hand), 2)
-        players.clear_hands()
+        g.clear_hands()
         self.assertEqual(len(p1.hand), 0)
         self.assertEqual(len(p1.hand), 0)
 
-    def test_players_organise_hands(self):
-        players = Players()
+    def test_game_organise_hands(self):
+        g = Game()
         p1 = Player("Name")
         p2 = Player("Name2")
         h7_card = Card("Hearts", 7)
@@ -208,14 +212,14 @@ class TestPlayersClass(unittest.TestCase):
         p1.pick_up_card(d6_card)
         p2.pick_up_card(h7_card)
         p2.pick_up_card(d7_card)
-        players.append(p1)
-        players.append(p2)
-        players.organise_hands()
+        g.append(p1)
+        g.append(p2)
+        g.organise_hands()
         self.assertEqual(p1.hand, [d6_card, h8_card])
         self.assertEqual(p2.hand, [d7_card, h7_card])
 
-    def test_players_return_player_with_7_diamonds(self):
-        players = Players()
+    def test_game_return_player_with_7_diamonds(self):
+        g = Game()
         p1 = Player("Name")
         p2 = Player("Name2")
         h7_card = Card("Hearts", 7)
@@ -226,31 +230,31 @@ class TestPlayersClass(unittest.TestCase):
         p1.pick_up_card(d6_card)
         p2.pick_up_card(h7_card)
         p2.pick_up_card(d7_card)
-        players.append(p1)
-        players.append(p2)
-        self.assertEqual(players.return_player_with_7_diamonds(), p2)
+        g.append(p1)
+        g.append(p2)
+        self.assertEqual(g.return_player_with_7_diamonds(), p2)
 
-    def test_players_enable_scoring(self):
-        p = Players()
-        p.enable_scoring()
-        self.assertTrue(p.scoring)
+    def test_game_enable_scoring(self):
+        g = Game()
+        g.enable_scoring()
+        self.assertTrue(g.scoring)
 
-    def test_players_is_scoring_enabled(self):
-        p = Players()
-        p.enable_scoring()
-        self.assertTrue(p.is_scoring_enabled())
+    def test_game_is_scoring_enabled(self):
+        g = Game()
+        g.enable_scoring()
+        self.assertTrue(g.is_scoring_enabled())
 
-    def test_shift_dealer(self):
-        players = Players()
+    def test_game_shift_dealer(self):
+        g = Game()
         p1 =  Player("Name1")
         p2 =  Player("Name2")
         p3 =  Player("Dealer")
         p1.set_for_dealer()
-        players.append(p1)
-        players.append(p2)
-        players.append(p3)
-        players.shift_dealer()
-        self.assertEqual(players.find_dealer(), p2)
+        g.append(p1)
+        g.append(p2)
+        g.append(p3)
+        g.shift_dealer()
+        self.assertEqual(g.find_dealer(), p2)
 
 class TestLayoutsClass(unittest.TestCase):
     def test_layouts_init(self):
@@ -481,15 +485,15 @@ class TestFunctions(unittest.TestCase):
 
     def test_deal_cards(self):
         d = Deck()
-        players = Players()
+        g = Game()
         p1 =  Player("Name1")
         p2 =  Player("Name2")
         p3 =  Player("Dealer")
         p3.set_for_dealer()
-        players.append(p1)
-        players.append(p2)
-        players.append(p3)
-        deal_cards(players, d)
+        g.append(p1)
+        g.append(p2)
+        g.append(p3)
+        deal_cards(g, d)
         self.assertEqual(len(p1.hand), 18)
         self.assertEqual(len(p2.hand), 17)
         self.assertEqual(len(p2.hand), 17)
